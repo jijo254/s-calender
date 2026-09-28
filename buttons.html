@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Calendar Scheduler</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f8;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: auto;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            margin-bottom: 8px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        label {
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        textarea,
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .add-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .nav-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .delete-all-btn {
+            background: #c0392b;
+            color: white;
+            font-size: 15px;
+            padding: 12px 20px;
+        }
+
+        .delete-all-btn:hover {
+            background: #922b21;
+        }
+
+        .repeat-btn {
+            background: #8e44ad;
+            color: white;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .week-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .week-navigation h2 {
+            margin: 0;
+            text-align: center;
+            flex: 1;
+        }
+
+        .calendar-container {
+            overflow-x: auto;
+        }
+
+        .week-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .week-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .week-table td {
+            vertical-align: top;
+            height: 220px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: #fafafa;
+        }
+
+        .today {
+            background: #fff3cd !important;
+        }
+
+        .today-header {
+            background: #e67e22 !important;
+        }
+
+        .date-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .event {
+            background: #3498db;
+            color: white;
+            padding: 8px;
+            margin-bottom: 7px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .event strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .event small {
+            display: block;
+        }
+
+        .empty-day {
+            color: #999;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 13px;
+        }
+
+        .repeat-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .repeat-controls input {
+            width: 100px;
+        }
+
+        .event-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .event-item {
+            border-left: 5px solid #3498db;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .event-item h3 {
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+
+        .event-item p {
+            margin: 4px 0;
+        }
+
+        .no-events {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
+
+        .delete-all-section {
+            text-align: center;
+            border: 2px solid #f5b7b1;
+        }
+
+        .warning-text {
+            color: #922b21;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 800px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: span 1;
+            }
+
+            .week-navigation {
+                flex-direction: column;
+            }
+
+            .week-table {
+                min-width: 900px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header>
+        <h1>📅 Smart Calendar Scheduler</h1>
+        <p>Plan and manage your weekly activities easily</p>
+    </header>
+
+
+    <!-- ADD SCHEDULE -->
+    <div class="section">
+
+        <h2>➕ Add Schedule</h2>
+
+        <div id="message" class="message"></div>
+
+        <form id="scheduleForm">
+
+            <div class="form-group">
+
+                <label for="title">
+                    Activity / Schedule Name
+                </label>
+
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Example: Mathematics Class"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="date">
+                    Date
+                </label>
+
+                <input
+                    type="date"
+                    id="date"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="time">
+                    Time
+                </label>
+
+                <input
+                    type="time"
+                    id="time"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group full">
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea
+                    id="description"
+                    placeholder="Enter additional information about the schedule..."
+                ></textarea>
+
+            </div>
+
+
+            <div class="form-group full">
+
+                <button
+                    type="submit"
+                    class="add-btn"
+                >
+                    ➕ Add Schedule
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- WEEKLY CALENDAR -->
+    <div class="section">
+
+        <div class="week-navigation">
+
+            <button
+                class="nav-btn"
+                onclick="previousWeek()"
+            >
+                ◀ Previous Week
+            </button>
+
+
+            <h2 id="weekTitle"></h2>
+
+
+            <button
+                class="nav-btn"
+                onclick="nextWeek()"
+            >
+                Next Week ▶
+            </button>
+
+        </div>
+
+
+        <div style="text-align:center; margin-bottom:15px;">
+
+            <button
+                class="nav-btn"
+                onclick="currentWeek()"
+            >
+                📅 Current Week
+            </button>
+
+        </div>
+
+
+        <div class="calendar-container">
+
+            <table class="week-table">
+
+                <thead>
+
+                    <tr id="weekHeader">
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    <tr id="weekBody">
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- REPEAT SCHEDULE -->
+    <div class="section">
+
+        <h2>🔁 Repeat Schedule</h2>
+
+        <div class="repeat-controls">
+
+            <label for="repeatEvent">
+                Select Schedule:
+            </label>
+
+
+            <select id="repeatEvent">
+
+                <option value="">
+                    -- Select Schedule --
+                </option>
+
+            </select>
+
+
+            <label for="repeatNumber">
+                Number:
+            </label>
+
+
+            <input
+                type="number"
+                id="repeatNumber"
+                min="1"
+                max="52"
+                value="1"
+            >
+
+
+            <select id="repeatType">
+
+                <option value="week">
+                    Week(s)
+                </option>
+
+                <option value="month">
+                    Month(s)
+                </option>
+
+            </select>
+
+
+            <button
+                class="repeat-btn"
+                onclick="repeatSchedule()"
+            >
+                🔁 Repeat Schedule
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ALL SCHEDULES -->
+    <div class="section">
+
+        <h2>📋 All Schedules</h2>
+
+        <div
+            id="eventList"
+            class="event-list"
+        ></div>
+
+    </div>
+
+
+    <!-- DELETE ALL SCHEDULES -->
+    <div class="section delete-all-section">
+
+        <h2>🗑 Delete All the Schedule</h2>
+
+        <p class="warning-text">
+            ⚠ Warning: This will permanently delete ALL schedules.
+        </p>
+
+        <button
+            class="delete-all-btn"
+            onclick="deleteAllSchedules()"
+        >
+            🗑 Delete all the schedule
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /*
+    ============================================
+            CALENDAR DATA
+    ============================================
+    */
+
+    let schedules =
+        JSON.parse(
+            localStorage.getItem("smartCalendar")
+        ) || [];
+
+
+    let displayedWeek =
+        new Date();
+
+
+    /*
+    ============================================
+            SAVE SCHEDULES
+    ============================================
+    */
+
+    function saveSchedules() {
+
+        localStorage.setItem(
+            "smartCalendar",
+            JSON.stringify(schedules)
+        );
+
+    }
+
+
+    /*
+    ============================================
+            SHOW MESSAGE
+    ============================================
+    */
+
+    function showMessage(message, type) {
+
+        const messageBox =
+            document.getElementById("message");
+
+
+        messageBox.textContent =
+            message;
+
+
+        messageBox.className =
+            "message " + type;
+
+
+        messageBox.style.display =
+            "block";
+
+
+        setTimeout(function() {
+
+            messageBox.style.display =
+                "none";
+
+        }, 4000);
+
+    }
+
+
+    /*
+    ============================================
+            FORMAT DATE
+    ============================================
+    */
+
+    function formatDate(date) {
+
+        const year =
+            date.getFullYear();
+
+
+        const month =
+            String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
+
+
+        const day =
+            String(
+                date.getDate()
+            ).padStart(2, "0");
+
+
+        return `${year}-${month}-${day}`;
+
+    }
+
+
+    /*
+    ============================================
+            GET MONDAY
+    ============================================
+    */
+
+    function getMonday(date) {
+
+        const result =
+            new Date(date);
+
+
+        const day =
+            result.getDay();
+
+
+        const difference =
+            day === 0
+                ? -6
+                : 1 - day;
+
+
+        result.setDate(
+            result.getDate() + difference
+        );
+
+
+        result.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        return result;
+
+    }
+
+
+    /*
+    ============================================
+            FORMAT DISPLAY DATE
+    ============================================
+    */
+
+    function formatDisplayDate(date) {
+
+        return date.toLocaleDateString(
+            "en-US",
+            {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+
+    }
+
+
+    /*
+    ============================================
+            DISPLAY WEEK
+    ============================================
+    */
+
+    function displayWeek() {
+
+        const monday =
+            getMonday(displayedWeek);
+
+
+        const header =
+            document.getElementById(
+                "weekHeader"
+            );
+
+
+        const body =
+            document.getElementById(
+                "weekBody"
+            );
+
+
+        header.innerHTML = "";
+
+        body.innerHTML = "";
+
+
+        const today =
+            formatDate(new Date());
+
+
+        let firstDay =
+            new Date(monday);
+
+
+        let lastDay =
+            new Date(monday);
+
+
+        lastDay.setDate(
+            lastDay.getDate() + 6
+        );
+
+
+        document.getElementById(
+            "weekTitle"
+        ).textContent =
+            formatDisplayDate(firstDay)
+            + " - "
+            + formatDisplayDate(lastDay);
+
+
+        /*
+        ========================================
+                DAY NAMES
+        ========================================
+        */
+
+        const dayNames = [
+
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+
+        ];
+
+
+        /*
+        ========================================
+                CREATE TABLE HEADER
+        ========================================
+        */
+
+        for (
+            let i = 0;
+            i < 7;
+            i++
+        ) {
+
+            const currentDate =
+                new Date(monday);
+
+
+            currentDate.setDate(
+                currentDate.getDate() + i
+            );
+
+
+            const dateString =
+                formatDate(currentDate);
+
+
+            const th =
+                document.createElement("th");
+
+
+            th.innerHTML =
+                dayNames[i]
+                + "<br>"
+                + currentDate.getDate()
+                + "/"
+                + (
+                    currentDate.getMonth() + 1
+                );
+
+
+            if (
+                dateString === today
+            ) {
+
+                th.classList.add(
+                    "today-header"
+                );
+
+            }
+
+
+            header.appendChild(th);
+
+        }
+
+
+        /*
+        ========================================
+                CREATE TABLE BODY
+        ========================================
+        */
+
+        for (
+            let i = 0;
+            i < 7;
+            i++
+        ) {
+
+            const currentDate =
+                new Date(monday);
+
+
+            currentDate.setDate(
+                currentDate.getDate() + i
+            );
+
+
+            const dateString =
+                formatDate(currentDate);
+
+
+            const td =
+                document.createElement("td");
+
+
+            if (
+                dateString === today
+            ) {
+
+                td.classList.add(
+                    "today"
+                );
+
+            }
+
+
+            const dateNumber =
+                document.createElement("div");
+
+
+            dateNumber.className =
+                "date-number";
+
+
+            dateNumber.textContent =
+                currentDate.toLocaleDateString(
+                    "en-US",
+                    {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric"
+                    }
+                );
+
+
+            td.appendChild(dateNumber);
+
+
+            /*
+            FIND SCHEDULES FOR DAY
+            */
+
+            const dayEvents =
+                schedules
+                .filter(
+                    event =>
+                        event.date === dateString
+                )
+                .sort(
+                    (a, b) =>
+                        a.time.localeCompare(
+                            b.time
+                        )
+                );
+
+
+            /*
+            NO EVENTS
+            */
+
+            if (
+                dayEvents.length === 0
+            ) {
+
+                const empty =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                empty.className =
+                    "empty-day";
+
+
+                empty.textContent =
+                    "No activities";
+
+
+                td.appendChild(empty);
+
+            }
+
+
+            /*
+            DISPLAY EVENTS
+            */
+
+            else {
+
+                dayEvents.forEach(
+                    event => {
+
+                        const eventDiv =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        eventDiv.className =
+                            "event";
+
+
+                        eventDiv.innerHTML = `
+
+                            <strong>
+                                ${escapeHTML(
+                                    event.title
+                                )}
+                            </strong>
+
+                            <small>
+                                ⏰ ${event.time}
+                            </small>
+
+                            <small>
+                                ${escapeHTML(
+                                    event.description || ""
+                                )}
+                            </small>
+
+                        `;
+
+
+                        td.appendChild(
+                            eventDiv
+                        );
+
+                    }
+                );
+
+            }
+
+
+            body.appendChild(td);
+
+        }
+
+    }
+
+
+    /*
+    ============================================
+            PREVIOUS WEEK
+    ============================================
+    */
+
+    function previousWeek() {
+
+        displayedWeek.setDate(
+            displayedWeek.getDate() - 7
+        );
+
+
+        displayWeek();
+
+    }
+
+
+    /*
+    ============================================
+            NEXT WEEK
+    ============================================
+    */
+
+    function nextWeek() {
+
+        displayedWeek.setDate(
+            displayedWeek.getDate() + 7
+        );
+
+
+        displayWeek();
+
+    }
+
+
+    /*
+    ============================================
+            CURRENT WEEK
+    ============================================
+    */
+
+    function currentWeek() {
+
+        displayedWeek =
+            new Date();
+
+
+        displayWeek();
+
+    }
+
+
+    /*
+    ============================================
+            ADD SCHEDULE
+    ============================================
+    */
+
+    document
+        .getElementById("scheduleForm")
+        .addEventListener(
+            "submit",
+            function(event) {
+
+                event.preventDefault();
+
+
+                const title =
+                    document
+                    .getElementById("title")
+                    .value
+                    .trim();
+
+
+                const date =
+                    document
+                    .getElementById("date")
+                    .value;
+
+
+                const time =
+                    document
+                    .getElementById("time")
+                    .value;
+
+
+                const description =
+                    document
+                    .getElementById("description")
+                    .value
+                    .trim();
+
+
+                /*
+                =================================
+                CHECK DUPLICATE ACTIVITY
+                =================================
+                */
+
+                const duplicateActivity =
+                    schedules.some(
+                        existing =>
+
+                            existing.date === date &&
+
+                            existing.title
+                                .trim()
+                                .toLowerCase() ===
+                            title
+                                .toLowerCase()
+                    );
+
+
+                if (
+                    duplicateActivity
+                ) {
+
+                    showMessage(
+                        "This activity already exists on this day. Please choose another activity or date.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                =================================
+                CHECK DUPLICATE TIME
+                =================================
+                */
+
+                const duplicateTime =
+                    schedules.some(
+                        existing =>
+
+                            existing.date === date &&
+
+                            existing.time === time
+                    );
+
+
+                if (
+                    duplicateTime
+                ) {
+
+                    showMessage(
+                        "Another schedule already exists at this time. Please choose another time.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                =================================
+                CREATE SCHEDULE
+                =================================
+                */
+
+                const newSchedule = {
+
+                    id:
+                        Date.now(),
+
+                    title:
+                        title,
+
+                    date:
+                        date,
+
+                    time:
+                        time,
+
+                    description:
+                        description
+
+                };
+
+
+                schedules.push(
+                    newSchedule
+                );
+
+
+                saveSchedules();
+
+
+                displayWeek();
+
+                displayAllSchedules();
+
+                updateRepeatDropdown();
+
+
+                document
+                    .getElementById(
+                        "scheduleForm"
+                    )
+                    .reset();
+
+
+                setTodayDate();
+
+
+                showMessage(
+                    "Schedule added successfully!",
+                    "success"
+                );
+
+            }
+        );
+
+
+    /*
+    ============================================
+            DISPLAY ALL SCHEDULES
+    ============================================
+    */
+
+    function displayAllSchedules() {
+
+        const list =
+            document.getElementById(
+                "eventList"
+            );
+
+
+        list.innerHTML = "";
+
+
+        if (
+            schedules.length === 0
+        ) {
+
+            list.innerHTML =
+                `
+                <div class="no-events">
+                    No schedules available.
+                </div>
+                `;
+
+            return;
+
+        }
+
+
+        /*
+        SORT SCHEDULES
+        */
+
+        const sortedSchedules =
+            [...schedules].sort(
+                function(a, b) {
+
+                    if (
+                        a.date === b.date
+                    ) {
+
+                        return a.time.localeCompare(
+                            b.time
+                        );
+
+                    }
+
+                    return a.date.localeCompare(
+                        b.date
+                    );
+
+                }
+            );
+
+
+        /*
+        DISPLAY EACH SCHEDULE
+        */
+
+        sortedSchedules.forEach(
+            function(event) {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                item.className =
+                    "event-item";
+
+
+                item.innerHTML = `
+
+                    <h3>
+                        ${escapeHTML(
+                            event.title
+                        )}
+                    </h3>
+
+                    <p>
+                        📅 <strong>Date:</strong>
+                        ${event.date}
+                    </p>
+
+                    <p>
+                        ⏰ <strong>Time:</strong>
+                        ${event.time}
+                    </p>
+
+                    <p>
+                        📝 <strong>Description:</strong>
+                        ${escapeHTML(
+                            event.description ||
+                            "No description"
+                        )}
+                    </p>
+
+                    <button
+                        class="delete-btn"
+                        onclick="deleteSchedule(
+                            ${event.id}
+                        )"
+                    >
+                        🗑 Delete
+                    </button>
+
+                `;
+
+
+                list.appendChild(item);
+
+            }
+        );
+
+    }
+
+
+    /*
+    ============================================
+            DELETE ONE SCHEDULE
+    ============================================
+    */
+
+    function deleteSchedule(id) {
+
+        const confirmation =
+            confirm(
+                "Are you sure you want to delete this schedule?"
+            );
+
+
+        if (!confirmation) {
+
+            return;
+
+        }
+
+
+        schedules =
+            schedules.filter(
+                event =>
+                    event.id !== id
+            );
+
+
+        saveSchedules();
+
+
+        displayWeek();
+
+        displayAllSchedules();
+
+        updateRepeatDropdown();
+
+
+        showMessage(
+            "Schedule deleted successfully.",
+            "success"
+        );
+
+    }
+
+
+    /*
+    ============================================
+            DELETE ALL THE SCHEDULE
+    ============================================
+    */
+
+    function deleteAllSchedules() {
+
+        /*
+        CHECK WHETHER THERE ARE SCHEDULES
+        */
+
+        if (
+            schedules.length === 0
+        ) {
+
+            showMessage(
+                "There are no schedules to delete.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        /*
+        CONFIRMATION
+        */
+
+        const confirmation =
+            confirm(
+                "WARNING!\n\n" +
+                "This will delete ALL schedules.\n\n" +
+                "Are you sure you want to continue?"
+            );
+
+
+        /*
+        IF USER CANCELS
+        */
+
+        if (!confirmation) {
+
+            showMessage(
+                "Delete operation cancelled.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        /*
+        DELETE EVERYTHING
+        */
+
+        schedules = [];
+
+
+        /*
+        REMOVE FROM LOCAL STORAGE
+        */
+
+        localStorage.removeItem(
+            "smartCalendar"
+        );
+
+
+        /*
+        UPDATE APPLICATION
+        */
+
+        displayWeek();
+
+        displayAllSchedules();
+
+        updateRepeatDropdown();
+
+
+        /*
+        SHOW SUCCESS MESSAGE
+        */
+
+        showMessage(
+            "All schedules have been deleted successfully.",
+            "success"
+        );
+
+    }
+
+
+    /*
+    ============================================
+            UPDATE REPEAT DROPDOWN
+    ============================================
+    */
+
+    function updateRepeatDropdown() {
+
+        const select =
+            document.getElementById(
+                "repeatEvent"
+            );
+
+
+        select.innerHTML =
+            `
+            <option value="">
+                -- Select Schedule --
+            </option>
+            `;
+
+
+        schedules.forEach(
+            function(event) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    event.id;
+
+
+                option.textContent =
+                    `${event.title} - ${event.date} ${event.time}`;
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+    }
+
+
+    /*
+    ============================================
+            REPEAT SCHEDULE
+    ============================================
+    */
+
+    function repeatSchedule() {
+
+        const selectedId =
+            document
+            .getElementById(
+                "repeatEvent"
+            )
+            .value;
+
+
+        const number =
+            parseInt(
+                document
+                .getElementById(
+                    "repeatNumber"
+                )
+                .value
+            );
+
+
+        const type =
+            document
+            .getElementById(
+                "repeatType"
+            )
+            .value;
+
+
+        if (!selectedId) {
+
+            showMessage(
+                "Please select a schedule to repeat.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !number ||
+            number < 1
+        ) {
+
+            showMessage(
+                "Please enter a valid number of repetitions.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        const original =
+            schedules.find(
+                event =>
+                    event.id == selectedId
+            );
+
+
+        if (!original) {
+
+            return;
+
+        }
+
+
+        let added = 0;
+
+        let skipped = 0;
+
+
+        /*
+        CREATE REPEATED EVENTS
+        */
+
+        for (
+            let i = 1;
+            i <= number;
+            i++
+        ) {
+
+            const newDate =
+                new Date(
+                    original.date +
+                    "T00:00:00"
+                );
+
+
+            /*
+            REPEAT BY WEEK
+            */
+
+            if (
+                type === "week"
+            ) {
+
+                newDate.setDate(
+                    newDate.getDate() +
+                    (7 * i)
+                );
+
+            }
+
+
+            /*
+            REPEAT BY MONTH
+            */
+
+            else {
+
+                newDate.setMonth(
+                    newDate.getMonth() +
+                    i
+                );
+
+            }
+
+
+            const dateString =
+                formatDate(newDate);
+
+
+            /*
+            CHECK DUPLICATE ACTIVITY
+            */
+
+            const duplicateActivity =
+                schedules.some(
+                    existing =>
+
+                        existing.date ===
+                        dateString &&
+
+                        existing.title
+                            .trim()
+                            .toLowerCase() ===
+                        original.title
+                            .trim()
+                            .toLowerCase()
+                );
+
+
+            /*
+            CHECK DUPLICATE TIME
+            */
+
+            const duplicateTime =
+                schedules.some(
+                    existing =>
+
+                        existing.date ===
+                        dateString &&
+
+                        existing.time ===
+                        original.time
+                );
+
+
+            if (
+                duplicateActivity ||
+                duplicateTime
+            ) {
+
+                skipped++;
+
+                continue;
+
+            }
+
+
+            /*
+            ADD REPEATED SCHEDULE
+            */
+
+            schedules.push({
+
+                id:
+                    Date.now() +
+                    Math.random(),
+
+                title:
+                    original.title,
+
+                date:
+                    dateString,
+
+                time:
+                    original.time,
+
+                description:
+                    original.description
+
+            });
+
+
+            added++;
+
+        }
+
+
+        /*
+        SAVE
+        */
+
+        saveSchedules();
+
+
+        /*
+        REFRESH DISPLAY
+        */
+
+        displayWeek();
+
+        displayAllSchedules();
+
+        updateRepeatDropdown();
+
+
+        /*
+        SHOW RESULT
+        */
+
+        showMessage(
+            `${added} schedule(s) added. ${skipped} duplicate schedule(s) skipped.`,
+            added > 0
+                ? "success"
+                : "error"
+        );
+
+    }
+
+
+    /*
+    ============================================
+            ESCAPE HTML
+    ============================================
+    */
+
+    function escapeHTML(text) {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.textContent =
+            text;
+
+
+        return div.innerHTML;
+
+    }
+
+
+    /*
+    ============================================
+            SET TODAY'S DATE
+    ============================================
+    */
+
+    function setTodayDate() {
+
+        document
+            .getElementById(
+                "date"
+            )
+            .value =
+            formatDate(
+                new Date()
+            );
+
+    }
+
+
+    /*
+    ============================================
+            AUTOMATIC NEW WEEK CHECK
+    ============================================
+    */
+
+    function checkNewWeek() {
+
+        const actualWeek =
+            getMonday(
+                new Date()
+            );
+
+
+        const displayedMonday =
+            getMonday(
+                displayedWeek
+            );
+
+
+        /*
+        If the displayed week is the
+        previous week and a new week
+        has started, move automatically
+        to the current week.
+        */
+
+        if (
+            formatDate(actualWeek) !==
+            formatDate(displayedMonday)
+        ) {
+
+            displayedWeek =
+                new Date();
+
+
+            displayWeek();
+
+        }
+
+    }
+
+
+    /*
+    ============================================
+            INITIALIZE APPLICATION
+    ============================================
+    */
+
+    function initializeCalendar() {
+
+        displayedWeek =
+            new Date();
+
+
+        setTodayDate();
+
+
+        displayWeek();
+
+
+        displayAllSchedules();
+
+
+        updateRepeatDropdown();
+
+    }
+
+
+    /*
+    ============================================
+            START APPLICATION
+    ============================================
+    */
+
+    initializeCalendar();
+
+
+    /*
+    Check for a new week every minute.
+    */
+
+    setInterval(
+        checkNewWeek,
+        60 * 1000
+    );
+
+</script>
+
+</body>
+</html>
